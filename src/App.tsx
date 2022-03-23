@@ -1,5 +1,5 @@
 import { Component, createSignal, Index } from "solid-js";
-import store, { updateCellLabel, updateColumnLabel } from "./store";
+import store, { getRowCells, updateCellLabel, updateColumnLabel } from "./store";
 import { InputField, inputValue, setInputValue } from "./core/🌍InputField";
 
 const emptyRenamingState = {
@@ -110,7 +110,8 @@ const App: Component = () => {
 									<div
 										id={`cells-${x + 1}`}
 										class="bg-slate-300 group-hover:bg-slate-400 border-slate-600 flex flex-col items-start"
-										classList={{ "border-l": !isFirst }}>
+										classList={{ "border-l": !isFirst }}
+									>
 										<Index each={column().cells}>
 											{(cell, y) => {
 												let isFirst = y === 0;
@@ -124,7 +125,30 @@ const App: Component = () => {
 																x: x + 1,
 																y: y + 1,
 															});
-														}}>
+														}}
+														onMouseEnter={(el)=>{
+															getRowCells({
+																y:y+1,
+																fromX:'left',
+																toX:'right'
+															}).forEach((cell)=>{
+																if(document.getElementById(`cell-${cell.x}-${cell.y}`)!==el.currentTarget){
+																	document.getElementById(`cell-${cell.x}-${cell.y}`)?.classList.add('bg-slate-400')
+																}
+															})
+														}}
+														onMouseLeave={(el)=>{
+															getRowCells({
+																y:y+1,
+																fromX:'left',
+																toX:'right'
+															}).forEach((cell)=>{
+																if(document.getElementById(`cell-${cell.x}-${cell.y}`)!==el.currentTarget){
+																	document.getElementById(`cell-${cell.x}-${cell.y}`)?.classList.remove('bg-slate-400')
+																}
+															})
+														}}
+														>
 														<span class="">{cell().label}</span>
 													</button>
 												);

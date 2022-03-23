@@ -3,9 +3,9 @@
 ## spreadsheet feature you need on web 
 
 - [X] Make Initial Commit
-- [ ] Simple UI 
+- [X] Simple UI 
 - [ ] add CSV Support
-- [ ] Editable Cell
+- [X] Editable Cell
 - [ ] Sticky Header
 - [ ] Provide Internal Functional
 - [ ] Sortable Columns Support

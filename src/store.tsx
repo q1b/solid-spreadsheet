@@ -12,6 +12,7 @@ type Store = {
 type Table = {
 	columns: Column[];
 };
+
 const createTable = (options?: Partial<Table>): Table => {
 	return {
 		columns: [],
@@ -26,7 +27,9 @@ type Column = {
 	x: number;
 	label: string;
 	cells: Cell[];
+	uniqueLabels: string[];
 };
+
 /* Getters */
 const getCells = (x: number) => {
 	return store.table.columns[x];
@@ -37,18 +40,13 @@ const createColumn = (label: string = "Default", cells: Cell[] = [], x?: number)
 	return {
 		label,
 		cells,
+		uniqueLabels: [],
 		x: x ? x : store.table.columns.length + 1,
 	};
 };
 
-export const updateColumnLabel = (x: number,label: string) => {
-	setStore(
-		"table",
-		"columns",
-		(column) => column.x === x,
-		'label',
-		label
-	);
+export const updateColumnLabel = (x: number, label: string) => {
+	setStore("table", "columns", (column) => column.x === x, "label", label);
 };
 
 /* 
@@ -59,9 +57,56 @@ type Cell = {
 	y: number;
 	label: string;
 };
+
 /* Getters */
-const getCell = (x: number, y: number) => {
+const getCell = (options: { x: number; y: number }) => {
+	const { x, y } = options;
 	return store.table.columns[x].cells[y];
+};
+
+export const getRowCells = (options: { y: number; fromX?: number | "left"; toX?: number | "right" }): Cell[] => {
+	const { y, fromX, toX } = options;
+	const cells: Cell[] = [];
+	if (typeof fromX === "number" && typeof toX === "number")
+		for (let X = fromX - 1; X < toX; X++) {
+			const cell = getCell({
+				x: X,
+				y: y - 1,
+			});
+			cells.push(cell);
+		}
+	else
+		for (let index = 0; index < store.table.columns.length; index++) {
+			const cell = getCell({
+				x: index,
+				y: y - 1,
+			});
+			cells.push(cell);
+		}
+
+	return cells;
+};
+
+export const getColumnCells = (options: { x: number; fromY: number | "top"; toY: number | "bottom" }): Cell[] => {
+	const { x, fromY, toY } = options;
+	const cells: Cell[] = [];
+	if (typeof fromY === "number" && typeof toY === "number")
+		for (let Y = fromY - 1; Y < toY; Y++) {
+			const cell = getCell({
+				x: x - 1,
+				y: Y,
+			});
+			cells.push(cell);
+		}
+	else
+		for (let index = 0; index < store.table.columns[x].cells.length; index++) {
+			const cell = getCell({
+				x: x - 1,
+				y: index,
+			});
+			cells.push(cell);
+		}
+	return cells;
 };
 
 /* Setters */
@@ -107,6 +152,7 @@ export const [store, setStore] = createStore<Store>({
 		columns: [
 			{
 				label: "company",
+				uniqueLabels: [],
 				x: 1,
 				cells: [
 					{
@@ -143,6 +189,7 @@ export const [store, setStore] = createStore<Store>({
 			},
 			{
 				label: "type",
+				uniqueLabels: ["sports", "technology"],
 				x: 2,
 				cells: [
 					{
@@ -179,36 +226,37 @@ export const [store, setStore] = createStore<Store>({
 			},
 			{
 				label: "since",
+				uniqueLabels: [],
 				x: 3,
 				cells: [
 					{
 						label: "25 January 1964",
-						x: 2,
+						x: 3,
 						y: 1,
 					},
 					{
 						label: "4 September 1998",
-						x: 2,
+						x: 3,
 						y: 2,
 					},
 					{
 						label: "20 December 1993",
-						x: 2,
+						x: 3,
 						y: 3,
 					},
 					{
 						label: "4 April 1975",
-						x: 2,
+						x: 3,
 						y: 4,
 					},
 					{
 						label: "4 October 1947",
-						x: 2,
+						x: 3,
 						y: 5,
 					},
 					{
 						label: "18 August 1949",
-						x: 2,
+						x: 3,
 						y: 6,
 					},
 				],
@@ -216,5 +264,41 @@ export const [store, setStore] = createStore<Store>({
 		],
 	},
 });
+
+console.log(
+	"Columns Cells",
+	getColumnCells({
+		x: 1,
+		fromY: 2,
+		toY: 5,
+	})
+);
+
+console.log(
+	"Row Cells",
+	getRowCells({
+		y: 1,
+		fromX: 1,
+		toX: 2,
+	})
+);
+
+console.log(
+	"Columns Cells 1 FULL",
+	getColumnCells({
+		x: 1,
+		fromY: "top",
+		toY: "bottom",
+	})
+);
+
+console.log(
+	"Row Cells 1 FULL",
+	getRowCells({
+		y: 1,
+		fromX: "left",
+		toX: "right",
+	})
+);
 
 export default store;

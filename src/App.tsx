@@ -241,8 +241,7 @@ const App: Component = () => {
 				<SelectionBox
 					ref={(el) => {
 						// @ts-ignore
-						const containerElement: HTMLDivElement =
-							el.parentElement;
+						const containerElement: HTMLDivElement = el.parentElement;
 						const {
 							initialDimensions,
 							prevCell,
@@ -339,14 +338,13 @@ const App: Component = () => {
 			) : null} */}
 			<button
 				onClick={() => {
-					console.log("Selection State", selectionState());
 					setSelectionState(!selectionState());
 				}}
 				classList={{
 					"bg-green-500": selectionState(),
 					"bg-red-600": !selectionState(),
 				}}
-				class="bg-white px-2 py-1 rounded-lg scale-125 hover:scale-110 active:scale-100 transition-transform ease-out"
+				class="px-2 py-1 rounded-lg scale-125 hover:scale-110 active:scale-100 transition-transform ease-out"
 			></button>
 			<section class="max-w-4xl w-full h-96 flex items-center justify-center">
 				<div id="table" class="flex w-max p-2">
@@ -408,28 +406,28 @@ const App: Component = () => {
 																	},
 																);
 														}}
-														// onMouseEnter={(el)=>{
-														// 	getRowCells({
-														// 		y:y+1,
-														// 		fromX:'left',
-														// 		toX:'right'
-														// 	}).forEach((cell)=>{
-														// 		if(document.getElementById(`cell-${cell.x}-${cell.y}`)!==el.currentTarget){
-														// 			document.getElementById(`cell-${cell.x}-${cell.y}`)?.classList.add('bg-slate-400')
-														// 		}
-														// 	})
-														// }}
-														// onMouseLeave={(el)=>{
-														// 	getRowCells({
-														// 		y:y+1,
-														// 		fromX:'left',
-														// 		toX:'right'
-														// 	}).forEach((cell)=>{
-														// 		if(document.getElementById(`cell-${cell.x}-${cell.y}`)!==el.currentTarget){
-														// 			document.getElementById(`cell-${cell.x}-${cell.y}`)?.classList.remove('bg-slate-400')
-														// 		}
-														// 	})
-														// }}
+														onMouseEnter={(el)=>{
+															getRowCells({
+																y:y+1,
+																fromX:'left',
+																toX:'right'
+															}).forEach((cell)=>{
+																if(document.getElementById(`cell-${cell.x}-${cell.y}`)!==el.currentTarget){
+																	document.getElementById(`cell-${cell.x}-${cell.y}`)?.classList.add('bg-slate-400')
+																}
+															})
+														}}
+														onMouseLeave={(el)=>{
+															getRowCells({
+																y:y+1,
+																fromX:'left',
+																toX:'right'
+															}).forEach((cell)=>{
+																if(document.getElementById(`cell-${cell.x}-${cell.y}`)!==el.currentTarget){
+																	document.getElementById(`cell-${cell.x}-${cell.y}`)?.classList.remove('bg-slate-400')
+																}
+															})
+														}}
 													>
 														<span class="">
 															{cell().label}

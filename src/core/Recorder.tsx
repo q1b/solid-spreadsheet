@@ -258,9 +258,9 @@ export function useReactMediaRecorder({
 		previewStream: mediaStream() ? new MediaStream(mediaStream()?.getVideoTracks()) : null,
 		previewAudioStream: mediaStream() ? new MediaStream(mediaStream()?.getAudioTracks()) : null,
 		clearBlobUrl: () => {
-			let mediaBlobURL = mediaBlobUrl()
-			if (typeof mediaBlobURL === 'string' )
-				URL.revokeObjectURL(mediaBlobURL);
+			// let mediaBlobURL = mediaBlobUrl()
+			// if (typeof mediaBlobURL === 'string' )
+			// 	URL.revokeObjectURL(mediaBlobURL);
 			setMediaBlobUrl(undefined);
 			setStatus("idle");
 			getMediaStream();

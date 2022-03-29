@@ -166,7 +166,10 @@ const Cell = (props: Cell<ComponentProps<"div">>) => {
 			local.Recorder.startRecording();
 		} else {
 			local.Recorder.stopRecording();
-			track(() => local.Recorder.mediaBlobUrl());
+			track(() => {
+				local.Recorder.mediaBlobUrl();
+				local.Recorder.clearBlobUrl();
+			});
 		}
 	};
 	const handlePlayingPause = () => {

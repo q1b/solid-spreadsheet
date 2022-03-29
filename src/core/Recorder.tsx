@@ -8,12 +8,13 @@ export type ReactMediaRecorderRenderProps = {
 	pauseRecording: () => void;
 	resumeRecording: () => void;
 	stopRecording: () => void;
-	mediaBlobUrl: null | string;
+	mediaBlobUrl:Accessor<string|null>;
 	status: Accessor<StatusMessages>;
 	isAudioMuted: boolean;
 	previewStream: MediaStream | null;
 	previewAudioStream: MediaStream | null;
-	clearBlobUrl: () => void;
+	resetBlobUrl: () => void;
+	clearBlobUrl: (mediaBlobURL:string) => void;
 };
 
 export type ReactMediaRecorderHookProps = {
@@ -257,10 +258,14 @@ export function useReactMediaRecorder({
 		mediaStream,
 		previewStream: mediaStream() ? new MediaStream(mediaStream()?.getVideoTracks()) : null,
 		previewAudioStream: mediaStream() ? new MediaStream(mediaStream()?.getAudioTracks()) : null,
-		clearBlobUrl: () => {
-			// let mediaBlobURL = mediaBlobUrl()
-			// if (typeof mediaBlobURL === 'string' )
-			// 	URL.revokeObjectURL(mediaBlobURL);
+		clearBlobUrl: (mediaBlobURL:string) => {
+			if (typeof mediaBlobURL === 'string' )
+				URL.revokeObjectURL(mediaBlobURL);
+			setMediaBlobUrl(undefined);
+			setStatus("idle");
+			getMediaStream();
+		},
+		resetBlobUrl: () => {
 			setMediaBlobUrl(undefined);
 			setStatus("idle");
 			getMediaStream();

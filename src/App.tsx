@@ -1,4 +1,12 @@
-import { Component, createSignal, Index } from "solid-js";
+import {
+	Component,
+	createEffect,
+	createSignal,
+	Index,
+	on,
+	onCleanup,
+	onMount,
+} from "solid-js";
 import store, {
 	getRowCells,
 	updateCellLabel,
@@ -209,20 +217,39 @@ export const RenamingHandler = (
 };
 
 const App: Component = () => {
+	const [selectionState, setSelectionState] = createSignal<boolean>(false);
+	createEffect(
+		on(selectionState, (v, p) => {
+			if (!v) {
+				setResizerState(emptyResizerState);
+			}
+		}),
+	);
+	const handleKeyboardInitEvent = (e:KeyboardEvent) => e.key === "Shift" ? setSelectionState(true) : null;
+	const handleKeyboardExitEvent = (e:KeyboardEvent) => e.key === "Shift" ? setSelectionState(false) : null;
+	onMount(() => {
+		window.addEventListener("keydown",handleKeyboardInitEvent);
+		window.addEventListener("keyup",handleKeyboardExitEvent);
+		onCleanup(()=>{
+			removeEventListener("keydown",handleKeyboardInitEvent);
+			removeEventListener("keyup",handleKeyboardExitEvent);
+		})
+	});
 	return (
 		<main class="min-h-screen flex flex-col items-center justify-center bg-slate-900">
 			{resizerState().initialCell.x !== -1 ? (
 				<SelectionBox
 					ref={(el) => {
 						// @ts-ignore
-						const containerElement:HTMLDivElement = el.parentElement;
+						const containerElement: HTMLDivElement =
+							el.parentElement;
 						const {
 							initialDimensions,
 							prevCell,
 							initialCell,
 							prevDimensions,
 						} = resizerState();
-						if (prevDimensions.top === -1) {
+						if (prevDimensions.top === -1 ) {
 							console.log(
 								"INISIAL",
 								JSON.stringify(initialDimensions, null, 2),
@@ -235,18 +262,38 @@ const App: Component = () => {
 							containerElement.style.height = `${
 								initialDimensions.bottom - initialDimensions.top
 							}px`;
+						} else if (!selectionState()) {
+							console.log(
+								"INISIAL",
+								JSON.stringify(initialDimensions, null, 2),
+							);
+							containerElement.style.top = `${prevDimensions.top}px`;
+							containerElement.style.left = `${prevDimensions.left}px`;
+							containerElement.style.width = `${
+								prevDimensions.right - prevDimensions.left
+							}px`;
+							containerElement.style.height = `${
+								prevDimensions.bottom - prevDimensions.top
+							}px`;
 						} else {
-							if (initialCell.x - prevCell.x <= 0) {
+							if ( selectionState() && initialCell.x - prevCell.x <= 0) {
 								containerElement.style.left = `${initialDimensions.left}px`;
 								containerElement.style.width = `${
 									prevDimensions.right -
 									initialDimensions.left
 								}px`;
-							} else {
-								console.log("New Width", -1 * (prevDimensions.left-initialDimensions.right));
-								containerElement.style.left = `${prevDimensions.left}px`
+							}
+							if ( selectionState() && initialCell.x - prevCell.x > 0) {
+								console.log(
+									"New Width",
+									-1 *
+										(prevDimensions.left -
+											initialDimensions.right),
+								);
+								containerElement.style.left = `${prevDimensions.left}px`;
 								containerElement.style.width = `${
-									initialDimensions.right - prevDimensions.left
+									initialDimensions.right -
+									prevDimensions.left
 								}px`;
 							}
 							if (initialCell.y - prevCell.y <= 0) {
@@ -256,9 +303,10 @@ const App: Component = () => {
 									initialDimensions.top
 								}px`;
 							} else {
-								containerElement.style.top = `${prevDimensions.top}px`
+								containerElement.style.top = `${prevDimensions.top}px`;
 								containerElement.style.height = `${
-									initialDimensions.bottom - prevDimensions.top
+									initialDimensions.bottom -
+									prevDimensions.top
 								}px`;
 							}
 						}
@@ -289,6 +337,17 @@ const App: Component = () => {
 					}}
 				/>
 			) : null} */}
+			<button
+				onClick={() => {
+					console.log("Selection State", selectionState());
+					setSelectionState(!selectionState());
+				}}
+				classList={{
+					"bg-green-500": selectionState(),
+					"bg-red-600": !selectionState(),
+				}}
+				class="bg-white px-2 py-1 rounded-lg scale-125 hover:scale-110 active:scale-100 transition-transform ease-out"
+			></button>
 			<section class="max-w-4xl w-full h-96 flex items-center justify-center">
 				<div id="table" class="flex w-max p-2">
 					<Index each={store.table.columns}>
@@ -304,9 +363,12 @@ const App: Component = () => {
 										class="bg-slate-400 group-hover:bg-slate-500 hover:!bg-slate-600 px-3 py-1 border-slate-600 border-b text-left"
 										classList={{ "border-l": !isFirst }}
 										onClick={(el) => {
-											RenamingHandler(el.currentTarget, {
-												x: x + 1,
-											});
+												RenamingHandler(
+													el.currentTarget,
+													{
+														x: x + 1,
+													},
+												);
 										}}
 									>
 										<span class="text-white uppercase">
@@ -332,19 +394,19 @@ const App: Component = () => {
 																!isFirst,
 														}}
 														onClick={(el) => {
-															ResizerHandler(
-																el.currentTarget,
-																{
-																	cell: {
-																		x:
-																			x +
-																			1,
-																		y:
-																			y +
-																			1,
+																ResizerHandler(
+																	el.currentTarget,
+																	{
+																		cell: {
+																			x:
+																				x +
+																				1,
+																			y:
+																				y +
+																				1,
+																		},
 																	},
-																},
-															);
+																);
 														}}
 														// onMouseEnter={(el)=>{
 														// 	getRowCells({

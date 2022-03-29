@@ -22,7 +22,6 @@ export const SelectionBox = (props: SelectionBoxProps<PropsWithChildren<Componen
 					class="w-full bg-transparent text-white focus:outline-none pl-1"
 					ref={(el) => {
 						btnRef = el;
-                        console.log(el);
 						// @ts-ignore
 						props.ref(el);
 					}}

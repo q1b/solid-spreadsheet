@@ -36,7 +36,11 @@ const getCells = (x: number) => {
 };
 
 /* Setters */
-const createColumn = (label: string = "Default", cells: Cell[] = [], x?: number): Column => {
+const createColumn = (
+	label: string = "Default",
+	cells: Cell[] = [],
+	x?: number,
+): Column => {
 	return {
 		label,
 		cells,
@@ -56,6 +60,7 @@ type Cell = {
 	x: number;
 	y: number;
 	label: string;
+	audioURL?:string
 };
 
 /* Getters */
@@ -64,7 +69,11 @@ const getCell = (options: { x: number; y: number }) => {
 	return store.table.columns[x].cells[y];
 };
 
-export const getRowCells = (options: { y: number; fromX?: number | "left"; toX?: number | "right" }): Cell[] => {
+export const getRowCells = (options: {
+	y: number;
+	fromX?: number | "left";
+	toX?: number | "right";
+}): Cell[] => {
 	const { y, fromX, toX } = options;
 	const cells: Cell[] = [];
 	if (typeof fromX === "number" && typeof toX === "number")
@@ -87,7 +96,11 @@ export const getRowCells = (options: { y: number; fromX?: number | "left"; toX?:
 	return cells;
 };
 
-export const getColumnCells = (options: { x: number; fromY: number | "top"; toY: number | "bottom" }): Cell[] => {
+export const getColumnCells = (options: {
+	x: number;
+	fromY: number | "top";
+	toY: number | "bottom";
+}): Cell[] => {
 	const { x, fromY, toY } = options;
 	const cells: Cell[] = [];
 	if (typeof fromY === "number" && typeof toY === "number")
@@ -99,7 +112,11 @@ export const getColumnCells = (options: { x: number; fromY: number | "top"; toY:
 			cells.push(cell);
 		}
 	else
-		for (let index = 0; index < store.table.columns[x].cells.length; index++) {
+		for (
+			let index = 0;
+			index < store.table.columns[x].cells.length;
+			index++
+		) {
 			const cell = getCell({
 				x: x - 1,
 				y: index,
@@ -119,6 +136,22 @@ const createCell = (options?: Partial<Cell>): Cell => {
 	};
 };
 
+export const addRow = (Cells: Cell[]) => {
+	setStore(
+		"table",
+		"columns",
+		produce((columns) => {
+			if (columns.length === Cells.length) {
+				for (let index = 0; index < columns.length; index++) {
+					columns[index].cells.push(Cells[index]);
+				}
+			} else {
+				console.error("No Updates");
+			}
+		}),
+	);
+};
+
 const addNewRow = () => {
 	setStore(
 		"table",
@@ -131,7 +164,7 @@ const addNewRow = () => {
 					label: "new cell",
 				});
 			}
-		})
+		}),
 	);
 };
 
@@ -143,162 +176,125 @@ export const updateCellLabel = (x: number, y: number, label: string) => {
 		"cells",
 		(cell) => cell.y === y,
 		"label",
-		label
+		label,
 	);
 };
 
+export const updateCellAudioURL = (x: number, y: number, audioURL: string) => {
+	setStore(
+		"table",
+		"columns",
+		(column) => column.x === x,
+		"cells",
+		(cell) => cell.y === y,
+		"audioURL",
+		audioURL,
+	);
+};
+
+export const makeStoreFromCSV = (csv: string[][]) => {
+	setStore(
+		"table",
+		"columns",
+		produce((columns) => {
+			csv[0].forEach((header, i) => {
+				columns.push({
+					label: header,
+					x: i + 1,
+					cells: [],
+					uniqueLabels: [],
+				});
+			});
+			csv.shift();
+			columns.forEach((col, colIndex) => {
+				csv.forEach((row, rowIndex) => {
+					columns[colIndex].cells.push({
+						label: row[colIndex],
+						x: colIndex + 1,
+						y: rowIndex + 1,
+					});
+				});
+			});
+		}),
+	);
+};
+
+export const cvtFromCSV = (csv: string[][]) => {
+	const Initialally = createTable();
+	csv[0].forEach((header, i) => {
+		Initialally.columns.push({
+			label: header,
+			x: i + 1,
+			cells: [],
+			uniqueLabels: [],
+		});
+	});
+	csv.shift();
+	Initialally.columns.forEach((col, colIndex) => {
+		csv.forEach((row, rowIndex) => {
+			Initialally.columns[colIndex].cells.push({
+				label: row[colIndex],
+				x: colIndex + 1,
+				y: rowIndex + 1,
+			});
+		});
+	});
+};
+
+export const cvtFromStore = (nw: Store) => {
+	let ld: string[][] = [[]];
+	nw.table.columns.forEach((col) => {
+		ld[0].push(col.label);
+		col.cells.forEach((cell, i) => {
+			if (ld[i + 1] === undefined) {
+				ld.push([cell.label]);
+			} else {
+				ld[i + 1].push(cell.label);
+			}
+		});
+	});
+};
+
 export const [store, setStore] = createStore<Store>({
-	table: {
-		columns: [
-			{
-				label: "company",
-				uniqueLabels: [],
-				x: 1,
-				cells: [
-					{
-						label: "nike",
-						x: 1,
-						y: 1,
-					},
-					{
-						label: "google",
-						x: 1,
-						y: 2,
-					},
-					{
-						label: "airasia",
-						x: 1,
-						y: 3,
-					},
-					{
-						label: "microsoft",
-						x: 1,
-						y: 4,
-					},
-					{
-						label: "H&M",
-						x: 1,
-						y: 5,
-					},
-					{
-						label: "adidas",
-						x: 1,
-						y: 6,
-					},
-				],
-			},
-			{
-				label: "type",
-				uniqueLabels: ["sports", "technology"],
-				x: 2,
-				cells: [
-					{
-						label: "sports",
-						x: 2,
-						y: 1,
-					},
-					{
-						label: "technology",
-						x: 2,
-						y: 2,
-					},
-					{
-						label: "Airlines",
-						x: 2,
-						y: 3,
-					},
-					{
-						label: "technology",
-						x: 2,
-						y: 4,
-					},
-					{
-						label: "cloths",
-						x: 2,
-						y: 5,
-					},
-					{
-						label: "sports",
-						x: 2,
-						y: 6,
-					},
-				],
-			},
-			{
-				label: "since",
-				uniqueLabels: [],
-				x: 3,
-				cells: [
-					{
-						label: "25 January 1964",
-						x: 3,
-						y: 1,
-					},
-					{
-						label: "4 September 1998",
-						x: 3,
-						y: 2,
-					},
-					{
-						label: "20 December 1993",
-						x: 3,
-						y: 3,
-					},
-					{
-						label: "4 April 1975",
-						x: 3,
-						y: 4,
-					},
-					{
-						label: "4 October 1947",
-						x: 3,
-						y: 5,
-					},
-					{
-						label: "18 August 1949",
-						x: 3,
-						y: 6,
-					},
-				],
-			},
-		],
-	},
+	table:{
+		columns:[]
+	}
 });
 
-console.log(
-	"Columns Cells",
-	getColumnCells({
-		x: 1,
-		fromY: 2,
-		toY: 5,
-	})
-);
+// console.log(
+// 	"Columns Cells",
+// 	getColumnCells({
+// 		x: 1,
+// 		fromY: 2,
+// 		toY: 5,
+// 	}),
+// );
 
-console.log(
-	"Row Cells",
-	getRowCells({
-		y: 1,
-		fromX: 1,
-		toX: 2,
-	})
-);
+// console.log(
+// 	"Row Cells",
+// 	getRowCells({
+// 		y: 1,
+// 		fromX: 1,
+// 		toX: 2,
+// 	}),
+// );
 
-console.log(
-	"Columns Cells 1 FULL",
-	getColumnCells({
-		x: 1,
-		fromY: "top",
-		toY: "bottom",
-	})
-);
+// console.log(
+// 	"Columns Cells 1 FULL",
+// 	getColumnCells({
+// 		x: 1,
+// 		fromY: "top",
+// 		toY: "bottom",
+// 	}),
+// );
 
-console.log(
-	"Row Cells 1 FULL",
-	getRowCells({
-		y: 1,
-		fromX: "left",
-		toX: "right",
-	})
-);
+// console.log(
+// 	"Row Cells 1 FULL",
+// 	getRowCells({
+// 		y: 1,
+// 		fromX: "left",
+// 		toX: "right",
+// 	}),
+// );
 
 export default store;

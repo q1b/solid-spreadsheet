@@ -12,6 +12,7 @@ import {
 	Index,
 	on,
 	onCleanup,
+	onMount,
 	Setter,
 	Show,
 	splitProps,
@@ -38,23 +39,21 @@ const App = () => {
 		["adidas", "sport", "18 August 1949"],
 	];
 	const [currentRecordingCell, setCurrentRecordingCellURL] =
-		createSignal<string>('');
+		createSignal<string>("");
 	const [audioElement, setAudioElement] = createSignal<
 		HTMLAudioElement | undefined
 	>();
 	makeStoreFromCSV(initRes);
 	return (
 		<section class="min-h-screen flex flex-col bg-slate-900 items-center justify-center">
-			{currentRecordingCell() ? (
-				<audio
-					ref={(el) => {
-						setAudioElement(el);
-					}}
-					src={currentRecordingCell()}
-					class="hidden"
-					autoplay
-				/>
-			) : null}
+			<audio
+				ref={(el) => {
+					setAudioElement(el);
+				}}
+				src={currentRecordingCell()}
+				class="hidden"
+				autoplay
+			/>
 			<span class="text-white">{Recorder.status()}</span>
 			<article class="flex bg-white">
 				<div id="table" class="flex">
@@ -83,8 +82,12 @@ const App = () => {
 												return (
 													<Cell
 														audioRef={audioElement}
-														currentRecordingCell={currentRecordingCell}
-														setCurrentRecordingCell={setCurrentRecordingCellURL}
+														currentRecordingCell={
+															currentRecordingCell
+														}
+														setCurrentRecordingCell={
+															setCurrentRecordingCellURL
+														}
 														Recorder={Recorder}
 														cellDetails={cell}
 														class={
@@ -132,9 +135,9 @@ const Header = (props: Header<ComponentProps<"button">>) => {
 };
 
 type Cell<P = {}> = P & {
-	audioRef:Accessor<HTMLAudioElement|undefined>,
-	currentRecordingCell: Accessor<string>
-	setCurrentRecordingCell:Setter<string>
+	audioRef: Accessor<HTMLAudioElement | undefined>;
+	currentRecordingCell: Accessor<string>;
+	setCurrentRecordingCell: Setter<string>;
 	Recorder: ReactMediaRecorderRenderProps;
 	cellDetails: Accessor<{
 		readonly x: number;
@@ -175,21 +178,40 @@ const Cell = (props: Cell<ComponentProps<"div">>) => {
 		}
 	};
 	const handlePlayingPause = () => {
-		const audioURL = local.cellDetails().audioURL
+		const audioURL = local.cellDetails().audioURL;
 		const audioElement = local.audioRef();
-		if(audioURL !== local.currentRecordingCell()){
-			if(audioURL) local.setCurrentRecordingCell(audioURL);
-			if(audioElement && audioURL !== undefined){
+		if (audioURL !== local.currentRecordingCell()) {
+			if (audioURL) local.setCurrentRecordingCell(audioURL);
+			if (audioElement && audioURL !== undefined) {
 				audioElement.src = audioURL;
 				audioElement.play();
+				audioElement?.addEventListener(
+					"ended",
+					() => {
+						setPlayingState(false);
+					},
+					{
+						once: true,
+					},
+				);
+			}
+		} else {
+			if (isPlaying()) {
+				audioElement?.pause();
+			} else {
+				audioElement?.play();
+				audioElement?.addEventListener(
+					"ended",
+					() => {
+						setPlayingState(false);
+					},
+					{
+						once: true,
+					},
+				);
 			}
 		}
-		if(isPlaying()){
-			audioElement?.pause();
-		}else{
-			audioElement?.play();
-		}
-	}
+	};
 	return (
 		<div
 			class={
@@ -199,51 +221,66 @@ const Cell = (props: Cell<ComponentProps<"div">>) => {
 			{...others}
 		>
 			{local.cellDetails().label}
-			<div class="flex items-center gap-x-2">				 
+			<div class="flex items-center gap-x-2">
 				<Show
 					when={local.cellDetails()?.audioURL}
 					fallback={
 						<>
-						<span class="w-6">
-							🔴
-						</span>
-						<MicrophonePlayStopBtn
-							ref={(el) => {
-								el.addEventListener("click",handleRecording);
-								onCleanup(() => {
-									el.removeEventListener("click",handleRecording);
-								});
-							}}
-							colors={[
-								{
-									fill: "#923CF8",
-									stroke: "#FFF",
-								},
-								{
-									fill: "#818CF8",
-									stroke: "#FFF",
-								},
-							]}
-							state={recordingState}
-							setState={setRecordingState}
-						/>
+							<span class="w-6">🔴</span>
+							<MicrophonePlayStopBtn
+								ref={(el) => {
+									el.addEventListener(
+										"click",
+										handleRecording,
+									);
+									onCleanup(() => {
+										el.removeEventListener(
+											"click",
+											handleRecording,
+										);
+									});
+								}}
+								colors={[
+									{
+										fill: "#923CF8",
+										stroke: "#FFF",
+									},
+									{
+										fill: "#818CF8",
+										stroke: "#FFF",
+									},
+								]}
+								state={recordingState}
+								setState={setRecordingState}
+							/>
 						</>
 					}
 				>
 					<RecordingPlayPauseBtn
 						ref={(el) => {
-							el.addEventListener("click",handlePlayingPause);
+							el.addEventListener("click", handlePlayingPause);
 							onCleanup(() => {
-								el.removeEventListener("click",handlePlayingPause);
+								el.removeEventListener(
+									"click",
+									handlePlayingPause,
+								);
 							});
 						}}
 						state={isPlaying}
 						setState={setPlayingState}
 					/>
-					<RemoveBtn onClick={()=>{
-						local.Recorder.clearBlobUrl(local.cellDetails().audioURL);
-						updateCellAudioURL(local.cellDetails().x,local.cellDetails().y,undefined);
-					}}/>
+					<RemoveBtn
+						onClick={() => {
+							local.Recorder.clearBlobUrl(
+								local.cellDetails().audioURL,
+							);
+							updateCellAudioURL(
+								local.cellDetails().x,
+								local.cellDetails().y,
+								undefined,
+							);
+						}}
+					/>
 				</Show>
 			</div>
 		</div>
